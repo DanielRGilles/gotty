@@ -27,6 +27,7 @@ describe('why-i-autha routes', () => {
       .agent(app)
       .get('/api/v1/github/login/callback?code=42')
       .redirects(1);
+    // eslint-disable-next-line no-console
     console.log(req.body);
 
     expect(req.body).toEqual({
