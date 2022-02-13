@@ -3,9 +3,16 @@ const setup = require('../data/setup');
 const request = require('supertest');
 const app = require('../lib/app');
 
-jest.mock('../lib/utils/github');
 
-describe('why-i-autha routes', () => {
+jest.mock('../lib/utils/github');
+const registerAndLogin = async () => {
+  const agent = request.agent(app);
+  await agent.get('/api/v1/github/login/callback').redirects(1);
+
+  return agent;
+};
+
+describe('gottem gitty routes', () => {
   beforeEach(() => {
     return setup(pool);
   });
@@ -27,7 +34,6 @@ describe('why-i-autha routes', () => {
       .agent(app)
       .get('/api/v1/github/login/callback?code=42')
       .redirects(1);
-    console.log(req.body);
 
     expect(req.body).toEqual({
       id: expect.any(String),
@@ -37,6 +43,31 @@ describe('why-i-autha routes', () => {
       iat: expect.any(Number),
       exp: expect.any(Number),
     });
+  });
+  it('should log out of the app', async () => {
+    await request.agent(app).get('/api/v1/github/login/callback').redirects(1);
+
+    const response = await request.agent(app).delete('/api/v1/github');
+
+    expect(response.body.message).toEqual('Signed out successfully!');
+  });
+
+  it('should make a new post', async () => {
+    const agent = await registerAndLogin();
+    const post = await agent.post('/api/v1/posts').send({ post:'testpost', userId: '2' });
+    
+    expect(post.body).toEqual({ id: '2', post:'testpost' });
+  });
+
+  it('should get all posts', async () => {
+    const agent = await registerAndLogin();
+    await agent.post('/api/v1/posts').send({ post:'testpost', userId: '2' });
+    await agent.post('/api/v1/posts').send({ post:'testpost2', userId: '2' });
+
+
+    const response = await agent.get('/api/v1/posts');
+
+    expect(response.body).toEqual(expect.arrayContaining([{ id: expect.any(String), post:'testpost2' }, { id: expect.any(String), post:'testpost' }]));
   });
 });
 

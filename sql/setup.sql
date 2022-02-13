@@ -11,9 +11,9 @@ CREATE TABLE github_users (
 INSERT INTO github_users (username, email, avatar) VALUES('Dano','test', 'testlink') ;
 CREATE TABLE posts (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    post_id BIGINT REFERENCES github_users (id),
+    githubUser_id BIGINT REFERENCES github_users (id),
     post VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
-INSERT INTO posts (post_id, post)
+INSERT INTO posts (githubUser_id, post)
 VALUES (1, 'Hello,World');
